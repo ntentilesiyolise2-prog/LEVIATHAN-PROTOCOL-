@@ -1,0 +1,126 @@
+{
+  "symbols": [
+    "EURUSD=X", "GBPUSD=X", "AUDUSD=X", "USDJPY=X", "NZDUSD=X",
+    "BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD", "ADA-USD",
+    "GC=F", "SI=F", "CL=F", "NG=F", "HG=F",
+    "^GSPC", "^DJI", "^IXIC", "^RUT", "^FTSE", "^N225",
+    "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "META"
+  ],
+  "risk": {
+    "risk_percent": 1.0,
+    "max_daily_loss": 2.0,
+    "max_weekly_loss": 5.0,
+    "max_drawdown": 5.0,
+    "max_losses": 3,
+    "rr": 2.5,
+    "kelly": true,
+    "dynamic_scaling": true,
+    "var_confidence": 0.95,
+    "var_lookback": 252,
+    "black_swan_protection": true,
+    "volatility_scaling": true
+  },
+  "lock_in": {
+    "daily_goal_pnl": 100,
+    "daily_goal_trades": 3,
+    "weekly_goal_trades": 15,
+    "monthly_goal_pnl": 2000
+  },
+  "learning": {
+    "enabled": true,
+    "explain_signals": true,
+    "auto_optimize": true
+  },
+  "economic_guard": {
+    "enabled": true,
+    "block_hours_before": 2,
+    "block_hours_after": 1
+  },
+  "missions": {
+    "enabled": true,
+    "levels": [
+      {"name": "Bronze", "balance_min": 0, "balance_max": 100, "goal": 500, "reward": 10},
+      {"name": "Silver", "balance_min": 100, "balance_max": 500, "goal": 2000, "reward": 25},
+      {"name": "Gold", "balance_min": 500, "balance_max": 2000, "goal": 10000, "reward": 50},
+      {"name": "Platinum", "balance_min": 2000, "balance_max": 10000, "goal": 50000, "reward": 100},
+      {"name": "Diamond", "balance_min": 10000, "balance_max": 100000, "goal": 500000, "reward": 250},
+      {"name": "Elite", "balance_min": 100000, "balance_max": 1000000, "goal": 5000000, "reward": 1000}
+    ]
+  },
+  "sniper": {
+    "enabled": true,
+    "entry_zone_multiplier": 0.3
+  },
+  "pyramiding": {
+    "enabled": true,
+    "max_additions": 3,
+    "add_interval_pips": 10,
+    "add_risk_multiplier": 0.5
+  },
+  "agents": {
+    "research": {"enabled": true, "scan_interval": 60},
+    "strategy": {"enabled": true, "selection_mode": "adaptive"},
+    "risk": {"enabled": true, "monitor_interval": 30}
+  },
+  "institutional_data": {
+    "sec_filings": true,
+    "insider_trading": true,
+    "short_interest": true,
+    "economic_indicators": true
+  },
+  "web3": {
+    "enabled": true,
+    "metrics": ["mvrv", "funding_rate", "exchange_flow", "whale_activity"]
+  },
+  "prime": {
+    "enabled": true,
+    "optimization_interval_hours": 24
+  },
+  "school_mode": {
+    "enabled": true,
+    "start_hour": 7,
+    "end_hour": 15
+  },
+  "prop_firm": {
+    "enabled": true,
+    "max_daily_loss": 5.0,
+    "max_total_loss": 10.0,
+    "target_profit": 10.0
+  },
+  "leviathan": {
+    "enabled": true,
+    "bayesian_scoring": true,
+    "monte_carlo_simulations": true,
+    "liquidity_provision": true,
+    "simulation_runs": 1000
+  },
+  "rl": {
+    "enabled": true,
+    "learning_rate": 0.1,
+    "discount_factor": 0.95,
+    "exploration_rate": 0.2
+  },
+  "nlp_sentiment": {
+    "enabled": true,
+    "sources": ["twitter", "news"]
+  },
+  "auto_hedge": {
+    "enabled": true,
+    "correlation_threshold": 0.8
+  },
+  "time_decay": {
+    "enabled": true,
+    "decay_minutes": 60
+  },
+  "dynamic_rotation": {
+    "enabled": true,
+    "rotation_interval_hours": 4
+  },
+  "nexus": {
+    "unified_decision": true,
+    "conductor": true,
+    "ai_voting_ensemble": true,
+    "black_swan_protection": true,
+    "order_retry_backoff": true
+  }
+}
