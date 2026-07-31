@@ -3,6 +3,7 @@ from fastapi import APIRouter, Request, HTTPException, Query
 from fastapi.responses import JSONResponse
 from loguru import logger
 import asyncio
+from datetime import datetime  # added for timestamp
 
 from ..core import Engine, NotificationCenter
 from ..config import get_settings
@@ -15,7 +16,6 @@ def set_engine(engine: Engine):
     global _engine
     _engine = engine
 
-# ----- Helper -----
 def get_engine():
     if _engine is None:
         raise HTTPException(status_code=503, detail="Engine not initialized")
@@ -36,6 +36,7 @@ async def health():
         "running": engine._running,
         "initialized": engine._initialized,
         "notifications": engine.notification_center.count_unread(),
+        "data_service": engine.data_service is not None,  # new
     }
 
 # ----- Config -----
@@ -48,13 +49,11 @@ async def get_config():
 async def update_config(request: Request):
     engine = get_engine()
     data = await request.json()
-    # Update config model
     for key, value in data.items():
         if hasattr(engine.settings.config, key):
             setattr(engine.settings.config, key, value)
     engine.settings.save_config()
     logger.info(f"Config updated: {data}")
-    # Publish event
     await engine.event_bus.publish(
         Event(type="config_updated", data={"config": data})
     )
@@ -96,13 +95,28 @@ async def mark_all_read():
 # ----- Balance (placeholder) -----
 @router.get("/balance")
 async def get_balance():
-    # Placeholder; we'll implement full balance later
     return {"balance": 10000.0, "equity": 10000.0, "margin": 0.0, "free_margin": 10000.0, "margin_level": 100.0}
+
+# ----- NEW: Price endpoint (real-time) -----
+@router.get("/price/{symbol}")
+async def get_price(symbol: str):
+    engine = get_engine()
+    data_service = engine.get_data_service()
+    if data_service is None:
+        raise HTTPException(status_code=503, detail="Data service not ready")
+    price = await data_service.get_price(symbol)
+    if price is None:
+        raise HTTPException(status_code=404, detail="Price not available")
+    return {
+        "symbol": symbol,
+        "price": price,
+        "timestamp": datetime.utcnow().isoformat(),
+        "market_open": data_service.is_market_open(symbol)
+    }
 
 # ----- Signal (placeholder) -----
 @router.get("/signal")
 async def get_signal(symbol: str = Query("EURUSD=X")):
-    # Placeholder signal; real one will come from the signal engine
     return {
         "symbol": symbol,
         "direction": "WAIT",
@@ -117,13 +131,11 @@ async def get_signal(symbol: str = Query("EURUSD=X")):
 # ----- Scan (placeholder) -----
 @router.get("/scan")
 async def scan_all(symbols: Optional[str] = Query(None)):
-    # Placeholder; will return a list of signals from the engine
     return []
 
 # ----- Market Pulse (placeholder) -----
 @router.get("/market_pulse")
 async def market_pulse():
-    # Placeholder; will fetch real data later
     return {
         "dxy": 104.20, "dxy_change": 0.12,
         "vix": 15.30, "vix_change": -0.8,
@@ -138,15 +150,19 @@ async def market_pulse():
 # ----- Journal (placeholder) -----
 @router.get("/journal")
 async def get_journal():
-    # Placeholder; will fetch from trade journal
     return {"trades": []}
 
-# ----- Assistant Chat -----
+# ----- Assistant Chat (placeholder, no AI dependency) -----
 @router.post("/assistant/chat")
 async def assistant_chat(request: Request):
     data = await request.json()
     message = data.get("message", "")
     if not message:
         return {"response": "Please ask a question."}
-    # Placeholder; later we'll call the assistant
-    return {"response": f"I received your question: '{message}'. I'm still under development, but I'll soon give you real answers."}
+    # Simple rule-based response (no AI API)
+    if "price" in message.lower():
+        return {"response": "I can fetch live prices for you. Use the /price endpoint."}
+    elif "signal" in message.lower():
+        return {"response": "Signals are being generated. Check the Signals tab."}
+    else:
+        return {"response": f"Command received: '{message}'. I'm a self-contained assistant that doesn't rely on external AI."}
