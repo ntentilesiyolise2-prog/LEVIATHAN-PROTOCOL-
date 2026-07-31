@@ -2,12 +2,14 @@
 import asyncio
 import signal
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional
 from loguru import logger
 
 from ..config import get_settings
 from .events import EventBus, Event
 from .notification_center import NotificationCenter
+from ..data import MarketDataService  # new import
+
 
 class Engine:
     def __init__(self):
@@ -16,6 +18,7 @@ class Engine:
         self.notification_center = NotificationCenter(
             max_stored=self.settings.config.notification.max_stored
         )
+        self.data_service: Optional[MarketDataService] = None  # new
         self._initialized = False
         self._running = False
         self._tasks = []
@@ -53,8 +56,14 @@ class Engine:
                 loop.add_signal_handler(sig, lambda: asyncio.create_task(self.shutdown()))
             self._signal_handlers_set = True
 
-        # Start background tasks (placeholder for data service, signal engine, etc.)
-        # We'll add them later; for now, just a health task
+        # --- NEW: Initialize Data Service ---
+        self.data_service = MarketDataService(
+            self.settings, self.event_bus, self.notification_center
+        )
+        await self.data_service.start()
+        logger.info("MarketDataService started")
+        # ------------------------------------
+
         self._tasks.append(asyncio.create_task(self._health_task()))
         
         self._initialized = True
@@ -66,6 +75,10 @@ class Engine:
             return
         logger.info("Engine shutting down...")
         self._running = False
+        # Stop data service
+        if self.data_service:
+            await self.data_service.stop()
+            logger.info("MarketDataService stopped")
         for task in self._tasks:
             task.cancel()
         await asyncio.gather(*self._tasks, return_exceptions=True)
@@ -76,7 +89,6 @@ class Engine:
         """Periodic health check task."""
         while self._running:
             await asyncio.sleep(30)
-            # In future, we can check data providers, etc.
             logger.debug("Health check passed")
 
     def get_notification_center(self):
@@ -88,11 +100,13 @@ class Engine:
     def get_settings(self):
         return self.settings
 
+    def get_data_service(self):   # new getter
+        return self.data_service
+
     def reload_config(self):
         """Reload configuration without restarting."""
         self.settings.reload()
         logger.info("Configuration reloaded")
-        # Optionally, publish a config reload event
         asyncio.create_task(self.event_bus.publish(
             Event(type="config_reload", data={"settings": self.settings.config.model_dump()})
         ))
